@@ -267,7 +267,7 @@ export default function App() {
                         </div>
 
                         {/* Save Button */}
-                        <Button
+                        {/* <Button
                           onClick={() => saveMatch(match.id)}
                           disabled={match.saved}
                           className={`ml-4 ${
@@ -277,9 +277,9 @@ export default function App() {
                         >
                           <Save className="h-4 w-4 mr-1" />
                           {match.saved ? "Saved" : "Save"}
-                        </Button>
+                        </Button> */}
                       </div>
-                      {index < dayMatches.length - 1 && <Separator className="my-2" />}
+                      {/* {index < dayMatches.length - 1 && <Separator className="my-2" />} */}
                     </div>
                   ))}
                 </div>
