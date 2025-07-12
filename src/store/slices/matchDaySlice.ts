@@ -1,5 +1,6 @@
 import type { StateCreator } from "zustand";
 import type { Root, Game, Pronostic, MatchesByDate } from "@/interfaces/matches";
+import type { AppStore } from "../types";
 
 // User prediction interface
 export interface UserPrediction {
@@ -30,17 +31,17 @@ export interface MatchDaySlice {
   
   // Getters
   getPredictionForGame: (gameId: string) => UserPrediction | undefined;
-  getGameById: (gameId: string) => Game | undefined;
+  // getGameById: (gameId: string) => Game | undefined;
   hasSubmittedPrediction: (gameId: string) => boolean;
 }
 
 // Match day slice implementation
 export const matchDaySlice: StateCreator<
-  MatchDaySlice,
+  AppStore,
   [["zustand/immer", never]],
   [],
   MatchDaySlice
-> = (set, get) => ({
+> = (set, get, api) => ({
   currentMatches: null,
   userPredictions: [],
   isLoading: false,
@@ -121,10 +122,10 @@ export const matchDaySlice: StateCreator<
     return state.userPredictions.find((p) => p.gameId === gameId);
   },
 
-  getGameById: (gameId: string) => {
-    const state = get();
-    return state.currentMatches?.gamesByDate.find((game) => game.id === gameId);
-  },
+  // getGameById: (gameId: string) => {
+  //   const state = get();
+  //   return state.currentMatches?.gamesByDate.find((game) => game.id === gameId);
+  // },
 
   hasSubmittedPrediction: (gameId: string) => {
     const state = get();

@@ -12,9 +12,9 @@ export interface AppStore extends UserSlice, MatchDaySlice {}
 // Combine all slices into a single store with persistence
 export const useStore = create<AppStore>()(
   persist(
-    immer((...a) => ({
-      ...userSlice(...a),
-      ...matchDaySlice(...a),
+    immer((set, get, api) => ({
+      ...userSlice(set, get, api),
+      ...matchDaySlice(set, get, api),
     })),
     {
       name: 'prode-store', // unique name for localStorage key

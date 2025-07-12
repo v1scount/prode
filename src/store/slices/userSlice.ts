@@ -1,4 +1,5 @@
 import type { StateCreator } from "zustand";
+import type { AppStore } from "../types";
 
 // User state interface
 export interface User {
@@ -30,11 +31,11 @@ export interface UserSlice {
 
 // User slice implementation
 export const userSlice: StateCreator<
-  UserSlice,
+  AppStore,
   [["zustand/immer", never]],
   [],
   UserSlice
-> = (set, get) => ({
+> = (set, get, api) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
