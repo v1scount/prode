@@ -3,11 +3,14 @@ import { immer } from "zustand/middleware/immer";
 
 // User state interface
 export interface User {
-  id: number;
-  email?: string;
-  name?: string;
-  googleId?: string;
-  avatar?: string;
+  user: {
+    id: number;
+    email?: string;
+    name?: string;
+    googleId?: string;
+    avatar?: string;
+  };
+  accessToken?: string;
 }
 
 // User slice state interface

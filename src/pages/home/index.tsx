@@ -9,14 +9,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useStore } from "@/store";
-import { GoogleLogin } from '@react-oauth/google';
-import { useGoogleLogin } from '@react-oauth/google';
-import { api, type User as UserType } from "@/lib/api";
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
+import { api } from "@/lib/api";
+import type { User as UserType } from "@/store/slices/userSlice";
 
 interface Match {
   id: string;
@@ -99,10 +98,9 @@ export default function HomePage() {
   // Use store state instead of local state
   const { user, isAuthenticated, isLoading, error, login, logout, clearError } = useStore();
 
-  const handleGoogleLogin = async (credentialResponse: any) => {
-    const user = await api.verifyUser(credentialResponse.credential);
-    console.log('User:', user);
-    login(user.user);
+  const handleGoogleLogin = async (credentialResponse: CredentialResponse) => {
+    const user = await api.verifyUser(credentialResponse.credential || "");
+    login(user as unknown as UserType);
   }
 
   const handleLogout = () => {
@@ -134,22 +132,6 @@ export default function HomePage() {
         return match;
       })
     );
-  };
-
-  const saveMatch = (matchId: string) => {
-    setMatches((prev) =>
-      prev.map((match) => {
-        if (match.id === matchId) {
-          return { ...match, saved: true };
-        }
-        return match;
-      })
-    );
-
-    // toast({
-    //   title: "Prediction Saved!",
-    //   description: "Your score prediction has been saved successfully.",
-    // })
   };
 
   const formatDate = (dateString: string) => {
@@ -199,10 +181,10 @@ export default function HomePage() {
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2">
               <Avatar>
-                <AvatarImage src={user.avatar} />
-                <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
+                <AvatarImage src={user.user.avatar} />
+                <AvatarFallback>{user.user.name?.charAt(0)}</AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium text-gray-700">{user.name}</span>
+              <span className="text-sm font-medium text-gray-700">{user.user.name}</span>
               <Button
                 variant="outline"
                 size="sm"

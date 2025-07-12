@@ -1,8 +1,9 @@
 import axios from 'axios'
 import type { AxiosRequestConfig, AxiosResponse } from 'axios'
+import { useStore } from '../store'
 
 // Base API configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://prode-api-b502f110a3d0.herokuapp.com'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 // Create axios instance with default configuration
 const apiClient = axios.create({
@@ -11,6 +12,32 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 })
+
+// Add request interceptor to automatically add auth token
+apiClient.interceptors.request.use(
+  (config) => {
+    const state = useStore.getState()
+    if (state.user?.accessToken) {
+      config.headers.Authorization = `Bearer ${state.user.accessToken}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
+// Add response interceptor to handle auth errors
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      // Token is invalid or expired, logout the user
+      useStore.getState().logout()
+    }
+    return Promise.reject(error)
+  }
+)
 
 // Generic axios wrapper with error handling
 async function apiRequest<T>(
