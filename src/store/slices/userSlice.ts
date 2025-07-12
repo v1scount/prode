@@ -1,5 +1,4 @@
 import type { StateCreator } from "zustand";
-import { immer } from "zustand/middleware/immer";
 
 // User state interface
 export interface User {
@@ -21,6 +20,7 @@ export interface UserSlice {
   error: string | null;
 
   // Actions
+  
   login: (user: User) => Promise<void>;
   logout: () => void;
   setUser: (user: User) => void;

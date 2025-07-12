@@ -1,6 +1,8 @@
 import axios from 'axios'
 import type { AxiosRequestConfig, AxiosResponse } from 'axios'
-import { useStore } from '../store'
+import { useStore } from '../../store'
+import { createUser, verifyUser } from './user'
+import { getMatches } from './matches/matches'
 
 // Base API configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
@@ -40,7 +42,7 @@ apiClient.interceptors.response.use(
 )
 
 // Generic axios wrapper with error handling
-async function apiRequest<T>(
+export async function apiRequest<T>(
   endpoint: string,
   options: AxiosRequestConfig = {}
 ): Promise<T> {
@@ -58,31 +60,17 @@ async function apiRequest<T>(
   }
 }
 
-// Example API functions
+// Main API object with all endpoints
 export const api = {
-  // POST verify user
-  async verifyUser(googleCredential: string) {
-    return apiRequest<User>('/auth/google/verify', {
-      method: 'POST',
-      data: { credential: googleCredential },
-    })
-  },
+  // User-related endpoints
+  verifyUser,
+  createUser,
 
-  // POST create user
+  // Matches-related endpoints
+  getMatches,
+
+  // Other API endpoints can be added here
 }
 
-// Type definitions (you can move these to a separate types file)
-export interface User {
-  id: number;
-  email?: string
-  name?: string
-  googleId?: string
-  avatar?: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface CreateUserData {
-  name: string
-  email: string
-}
+// Re-export types for convenience
+export type { User, CreateUserData } from './user'

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +13,10 @@ import {
 } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useStore } from "@/store";
-import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
-import { api } from "@/lib/api";
+import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
+import { api } from "@/lib/api/api";
 import type { User as UserType } from "@/store/slices/userSlice";
+import { getMatches } from "@/lib/api/matches/matches";
 
 interface Match {
   id: string;
@@ -91,17 +92,28 @@ const initialMatches: Match[] = [
   },
 ];
 
-
 export default function HomePage() {
   const [matches, setMatches] = useState<Match[]>(initialMatches);
   const [loginDialog, setLoginDialog] = useState(false);
   // Use store state instead of local state
-  const { user, isAuthenticated, isLoading, error, login, logout, clearError } = useStore();
+  const {
+    user,
+    isAuthenticated,
+    isLoading,
+    error,
+    login,
+    logout,
+    clearError,
+    setCurrentMatches,
+    currentMatches,
+  } = useStore();
 
   const handleGoogleLogin = async (credentialResponse: CredentialResponse) => {
     const user = await api.verifyUser(credentialResponse.credential || "");
     login(user as unknown as UserType);
-  }
+  };
+
+  console.log("user", user);
 
   const handleLogout = () => {
     logout();
@@ -158,6 +170,32 @@ export default function HomePage() {
   const groupedMatches = groupMatchesByDate(matches);
   const savedCount = matches.filter((match) => match.saved).length;
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchMatches = async () => {
+      try {
+        const matches = await api.getMatches();
+        if (isMounted) {
+          // console.log(matches);
+          setCurrentMatches(matches.gamesByDate);
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error("Error fetching matches:", error);
+        }
+      }
+    };
+
+    fetchMatches();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [setCurrentMatches]);
+
+  console.log(currentMatches?.[0].matches[0].teams[0].colors.color);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4 w-screen">
       <div className="max-w-4xl mx-auto">
@@ -184,7 +222,9 @@ export default function HomePage() {
                 <AvatarImage src={user.user.avatar} />
                 <AvatarFallback>{user.user.name?.charAt(0)}</AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium text-gray-700">{user.user.name}</span>
+              <span className="text-sm font-medium text-gray-700">
+                {user.user.name}
+              </span>
               <Button
                 variant="outline"
                 size="sm"
@@ -211,8 +251,8 @@ export default function HomePage() {
                 <DialogHeader>
                   <DialogTitle>Iniciar sesión</DialogTitle>
                   <DialogDescription>
-                    Inicia sesión con Google para guardar tus predicciones y competir con
-                    tus amigos.
+                    Inicia sesión con Google para guardar tus predicciones y
+                    competir con tus amigos.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -222,12 +262,14 @@ export default function HomePage() {
                         handleGoogleLogin(credentialResponse);
                       }}
                       onError={() => {
-                        console.log('Google login failed');
+                        console.log("Google login failed");
                       }}
                     />
                   </div>
                   {error && (
-                    <div className="text-red-600 text-sm text-center">{error}</div>
+                    <div className="text-red-600 text-sm text-center">
+                      {error}
+                    </div>
                   )}
                 </div>
               </DialogContent>
@@ -237,94 +279,129 @@ export default function HomePage() {
 
         {/* Matches by Date */}
         <div className="space-y-8">
-          {Object.entries(groupedMatches).map(([date, dayMatches]) => (
-            <Card key={date} className="shadow-lg">
+          {currentMatches?.map((match) => (
+            <Card key={match.date} className="shadow-lg">
               <CardHeader className="bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-t-lg justify-center items-center">
                 <CardTitle className="text-xl font-semibold items-end">
-                  {formatDate(date)}
+                  {formatDate(match.date)}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-4">
-                  {dayMatches.map((match, index) => (
-                    <div key={match.id}>
-                      <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
-                        {/* Match Time */}
-                        <div className="text-sm font-medium text-gray-500 min-w-[60px]">
-                          {match.time}
-                        </div>
-
-                        {/* Home Team */}
-                        <div className="flex items-center gap-3 flex-1">
-                          <span className="font-semibold text-right flex-1 text-gray-900">
-                            {match.homeTeam}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                updateScore(match.id, "home", false)
-                              }
-                              disabled={match.homeScore === 0}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <span className="text-2xl font-bold text-blue-600 min-w-[30px] text-center">
-                              {match.homeScore}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                updateScore(match.id, "home", true)
-                              }
-                              className="h-8 w-8 p-0"
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
+                  {match.matches.map((game) => {
+                    const homeTeamColor = game.teams[0].colors.color;
+                    const awayTeamColor = game.teams[1].colors.color;
+                    return (
+                      <div key={game.id}>
+                        <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                          {/* Match Time */}
+                          <div className="text-sm font-medium text-gray-500 min-w-[60px]">
+                            {game.game_time_status_to_display === "Final"
+                              ? game.game_time_status_to_display
+                              : game.game_time_to_display}
                           </div>
-                        </div>
 
-                        {/* VS */}
-                        <div className="mx-4 text-gray-400 font-medium">VS</div>
-
-                        {/* Away Team */}
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                updateScore(match.id, "away", false)
-                              }
-                              disabled={match.awayScore === 0}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <span className="text-2xl font-bold text-red-600 min-w-[30px] text-center">
-                              {match.awayScore}
+                          {/* Home Team */}
+                          <div className="flex items-center gap-3 flex-1">
+                            <span className="font-semibold text-right flex-1 text-gray-900">
+                              {game.teams[0].name}
                             </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                updateScore(match.id, "away", true)
-                              }
-                              className="h-8 w-8 p-0"
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
+                            <img
+                              src={`https://api.promiedos.com.ar/images/team/${game.teams[0].id}/1`}
+                              alt={game.teams[0].name}
+                              className="w-6 h-6"
+                            />
+                            <div className="flex items-center gap-2">
+                              {game.game_time_status_to_display !==
+                                "Final" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    updateScore(game.id, "home", false)
+                                  }
+                                  disabled={game.scores?.[0] === 0}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                              )}
+                              <span
+                                className="text-2xl font-bold min-w-[30px] text-center"
+                                // style={{ color: homeTeamColor }}
+                              >
+                                {game.scores?.[0]}
+                              </span>
+                              {game.game_time_status_to_display !==
+                                "Final" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    updateScore(game.id, "home", true)
+                                  }
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                          <span className="font-semibold flex-1 text-gray-900">
-                            {match.awayTeam}
-                          </span>
-                        </div>
 
-                        {/* Save Button */}
-                        {/* <Button
+                          {/* VS */}
+                          <div className="mx-4 text-gray-400 font-medium">
+                            VS
+                          </div>
+
+                          {/* Away Team */}
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className="flex items-center gap-2">
+                              {game.game_time_status_to_display !==
+                                "Final" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    updateScore(game.id, "away", false)
+                                  }
+                                  disabled={game.scores?.[1] === 0}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                              )}
+                              <span
+                                className="text-2xl font-bold min-w-[30px] text-center"
+                                // style={{ color: awayTeamColor }}
+                              >
+                                {game.scores?.[1]}
+                              </span>
+                              {game.game_time_status_to_display !==
+                                "Final" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    updateScore(game.id, "away", true)
+                                  }
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                            <img
+                              src={`https://api.promiedos.com.ar/images/team/${game.teams[1].id}/1`}
+                              alt={game.teams[1].name}
+                              className="w-6 h-6"
+                            />
+                            <span className="font-semibold flex-1 text-gray-900">
+                              {game.teams[1].name}
+                            </span>
+                          </div>
+
+                          {/* Save Button */}
+                          {/* <Button
                           onClick={() => saveMatch(match.id)}
                           disabled={match.saved}
                           className={`ml-4 ${
@@ -335,10 +412,11 @@ export default function HomePage() {
                           <Save className="h-4 w-4 mr-1" />
                           {match.saved ? "Saved" : "Save"}
                         </Button> */}
+                        </div>
+                        {/* {index < dayMatches.length - 1 && <Separator className="my-2" />} */}
                       </div>
-                      {/* {index < dayMatches.length - 1 && <Separator className="my-2" />} */}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
