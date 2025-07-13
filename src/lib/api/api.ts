@@ -2,7 +2,7 @@ import axios from 'axios'
 import type { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { useStore } from '../../store'
 import { createUser, verifyUser } from './user'
-import { getMatches, sendPredictions, getMyPronostics } from './matches/matches'
+import { getMatches, sendPredictions } from './matches/matches'
 
 // Base API configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
@@ -78,7 +78,6 @@ export const api = {
   // Matches-related endpoints
   getMatches,
   sendPredictions,
-  getMyPronostics,
 
   // Other API endpoints can be added here
 }

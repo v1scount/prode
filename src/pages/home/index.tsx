@@ -2,7 +2,15 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Minus, Trophy, UserIcon, LogOut, Save, Trash2 } from "lucide-react";
+import {
+  Plus,
+  Minus,
+  Trophy,
+  UserIcon,
+  LogOut,
+  Save,
+  Trash2,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +24,7 @@ import { useStore } from "@/store";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { api, type PredictionData, type AuthResponse } from "@/lib/api/api";
 import type { User as UserType } from "@/store/slices/userSlice";
-import { getMatches, getMyPronostics } from "@/lib/api/matches/matches";
+import { getMatches } from "@/lib/api/matches/matches";
 import type { Game } from "@/interfaces/matches";
 
 interface Match {
@@ -96,15 +104,9 @@ const initialMatches: Match[] = [
 export default function HomePage() {
   const [matches, setMatches] = useState<Match[]>(initialMatches);
   const [loginDialog, setLoginDialog] = useState(false);
-  // Update predictions state to use "prediction" key
-  const [predictions, setPredictions] = useState<Array<{
-    externalId: string;
-    prediction: { scores: number[] };
-  }>>([]);
   const [savingPredictions, setSavingPredictions] = useState(false);
-  const [loadingPredictions, setLoadingPredictions] = useState(false);
-  
-  // Use store state instead of local state
+
+  // Use store state and methods instead of local state
   const {
     user,
     isAuthenticated,
@@ -115,54 +117,34 @@ export default function HomePage() {
     clearError,
     setCurrentMatches,
     currentMatches,
+    // Prediction-related store methods
+    updatePredictionScore,
+    getPredictionScore,
+    hasPrediction,
+    removePrediction,
+    getPredictionsCount,
+    getPredictionsForBackend,
+    submitPrediction,
+    getAllPredictionsForGame,
   } = useStore();
-
-  // Add function to fetch user's predictions
-  const fetchUserPredictions = async () => {
-    if (!isAuthenticated) return;
-    
-    setLoadingPredictions(true);
-    try {
-      const userPredictions = await getMyPronostics();
-      console.log("Fetched user predictions:", userPredictions);
-      
-      // Transform the backend response to match our state format
-      if (userPredictions && Array.isArray(userPredictions)) {
-        const transformedPredictions = userPredictions.map((prediction: any) => ({
-          externalId: prediction.externalId,
-          prediction: {
-            scores: prediction.prediction?.scores || [0, 0]
-          }
-        }));
-        setPredictions(transformedPredictions);
-      }
-    } catch (error) {
-      console.error("Error fetching user predictions:", error);
-    } finally {
-      setLoadingPredictions(false);
-    }
-  };
 
   const handleGoogleLogin = async (credentialResponse: CredentialResponse) => {
     try {
-      const authResponse = await api.verifyUser(credentialResponse.credential || "");
+      const authResponse = await api.verifyUser(
+        credentialResponse.credential || ""
+      );
       console.log("Auth response:", authResponse);
-      
+
       // Transform the response to match your store's User interface
       const userForStore = {
         user: authResponse.user,
-        accessToken: authResponse.access_token
+        accessToken: authResponse.access_token,
       };
-      
+
       console.log("User for store:", userForStore);
-      
+
       login(userForStore);
       setLoginDialog(false);
-      
-      // Fetch user's predictions after successful login
-      setTimeout(() => {
-        fetchUserPredictions();
-      }, 100);
     } catch (error) {
       console.error("Login failed:", error);
     }
@@ -172,106 +154,43 @@ export default function HomePage() {
     logout();
   };
 
-  // Update prediction score function to handle direct input
-  const updatePredictionScore = (
+  // Update prediction score function - now uses store
+  const handleUpdatePredictionScore = (
     gameId: string,
     team: "home" | "away",
     value: string
   ) => {
     // Convert input to number, default to 0 if invalid
     const score = value === "" ? 0 : Math.max(0, parseInt(value) || 0);
-    
-    setPredictions((prev) => {
-      // Find existing prediction or create new one
-      const existingIndex = prev.findIndex(p => p.externalId === gameId);
-      
-      if (existingIndex !== -1) {
-        // Update existing prediction
-        const updated = [...prev];
-        const existingPrediction = updated[existingIndex];
-        
-        // Ensure prediction structure exists
-        const currentScores = existingPrediction.prediction?.scores || [0, 0];
-        const newScores = [...currentScores];
-        
-        if (team === "home") {
-          newScores[0] = score;
-        } else {
-          newScores[1] = score;
-        }
-        
-        updated[existingIndex] = {
-          externalId: gameId,
-          prediction: { scores: newScores }
-        };
-        
-        return updated;
-      } else {
-        // Create new prediction
-        const newScores = [0, 0];
-        if (team === "home") {
-          newScores[0] = score;
-        } else {
-          newScores[1] = score;
-        }
-        
-        return [
-          ...prev,
-          {
-            externalId: gameId,
-            prediction: { scores: newScores }
-          }
-        ];
-      }
-    });
+    updatePredictionScore(gameId, team, score);
   };
 
-  // Get prediction score for display
-  const getPredictionScore = (gameId: string, team: "home" | "away") => {
-    const prediction = predictions.find(p => p.externalId === gameId);
-    if (!prediction) return "";
-    
-    const score = team === "home" ? prediction.prediction.scores[0] : prediction.prediction.scores[1];
-    return score.toString();
-  };
-
-  // Save predictions to backend
+  // Save predictions to backend using store data
   const savePredictions = async (gameIds?: string[]) => {
     if (!isAuthenticated) {
       setLoginDialog(true);
       return;
     }
 
-    console.log("About to save predictions");
-    console.log("Current user state:", user);
-    console.log("Is authenticated:", isAuthenticated);
-    console.log("Access token:", user?.accessToken);
-
     setSavingPredictions(true);
     try {
-      let predictionsToSend = predictions;
-      
-      // If specific gameIds provided, filter predictions
-      if (gameIds) {
-        predictionsToSend = predictions.filter(p => gameIds.includes(p.externalId));
-      }
+      const predictionsToSend = getPredictionsForBackend(gameIds);
 
       if (predictionsToSend.length > 0) {
         console.log("Sending predictions:", predictionsToSend);
-        // Now the format is already correct for the API
         await api.sendPredictions(predictionsToSend);
         console.log("Predictions saved successfully!");
+
+        // Mark predictions as submitted in store
+        predictionsToSend.forEach((pred) => {
+          submitPrediction(pred.externalId);
+        });
       }
     } catch (error) {
       console.error("Error saving predictions:", error);
     } finally {
       setSavingPredictions(false);
     }
-  };
-
-  // Save individual prediction
-  const saveSinglePrediction = async (gameId: string) => {
-    await savePredictions([gameId]);
   };
 
   // Save all predictions
@@ -304,24 +223,8 @@ export default function HomePage() {
     } else return match.game_time_status_to_display;
   };
 
-  // Get prediction for a game
-  const getPrediction = (gameId: string) => {
-    const prediction = predictions.find(p => p.externalId === gameId);
-    return prediction?.prediction || { scores: [0, 0] };
-  };
-
-  // Check if game has prediction
-  const hasPrediction = (gameId: string) => {
-    return predictions.some(p => p.externalId === gameId);
-  };
-
-  // Count predictions
-  const predictionsCount = predictions.length;
-
-  // Remove prediction function
-  const removePrediction = (gameId: string) => {
-    setPredictions((prev) => prev.filter(p => p.externalId !== gameId));
-  };
+  // Get predictions count from store
+  const predictionsCount = getPredictionsCount();
 
   useEffect(() => {
     let isMounted = true;
@@ -330,6 +233,8 @@ export default function HomePage() {
       try {
         const matches = await api.getMatches();
         if (isMounted) {
+          console.log("Matches fetched:", matches);
+          // setCurrentMatches now automatically processes predictions
           setCurrentMatches(matches.gamesByDate);
         }
       } catch (error) {
@@ -346,20 +251,11 @@ export default function HomePage() {
     };
   }, [setCurrentMatches]);
 
-  // Add useEffect to fetch predictions when user is authenticated
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchUserPredictions();
-    }
-  }, [isAuthenticated, user]);
-
-  console.log(predictions);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4 w-screen">
       <div className="max-w-4xl mx-auto">
         {/* Add custom CSS to hide number input arrows */}
-        <style jsx>{`
+        <style>{`
           input[type="number"]::-webkit-outer-spin-button,
           input[type="number"]::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -381,9 +277,11 @@ export default function HomePage() {
           <p className="text-lg text-gray-600 mb-4">
             Compete with friends by predicting match results!
           </p>
-          <Badge variant="secondary" className="text-sm">
-            {predictionsCount} predictions made
-          </Badge>
+          {isAuthenticated && (
+            <Badge variant="secondary" className="text-sm">
+              {predictionsCount} predictions made
+            </Badge>
+          )}
         </div>
 
         <div className="absolute top-4 right-4">
@@ -463,7 +361,7 @@ export default function HomePage() {
                     const isFinished = game.status.enum === 3;
                     const hasGamePrediction = hasPrediction(game.id);
                     const hasStarted = game.status.enum !== 1;
-                    
+
                     return (
                       <div key={game.id}>
                         <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
@@ -485,28 +383,36 @@ export default function HomePage() {
                                 className="w-6 h-6"
                               />
                               <span className="text-lg font-bold text-green-600">
-                                {hasStarted ? (game.scores?.[0] || 0) : "-"}
+                                {hasStarted ? game.scores?.[0] || 0 : "-"}
                               </span>
                             </div>
                             {/* Prediction input */}
-                            {!isFinished && (
+                            {!isFinished && isAuthenticated && (
                               <div className="flex items-center">
                                 <input
                                   type="number"
                                   min="0"
                                   max="99"
                                   value={getPredictionScore(game.id, "home")}
-                                  onChange={(e) => updatePredictionScore(game.id, "home", e.target.value)}
+                                  onChange={(e) =>
+                                    handleUpdatePredictionScore(
+                                      game.id,
+                                      "home",
+                                      e.target.value
+                                    )
+                                  }
                                   placeholder="-"
                                   className="w-12 h-8 text-center text-sm font-medium text-blue-600 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
                                 />
                               </div>
                             )}
                             {/* Show prediction for finished match - always show, dash if no prediction */}
-                            {isFinished && (
+                            {isFinished && isAuthenticated && (
                               <div className="flex items-center">
                                 <span className="text-sm font-medium text-blue-600 min-w-[20px] text-center">
-                                  {hasGamePrediction ? getPredictionScore(game.id, "home") : "-"}
+                                  {hasGamePrediction
+                                    ? getPredictionScore(game.id, "home")
+                                    : "-"}
                                 </span>
                               </div>
                             )}
@@ -514,9 +420,15 @@ export default function HomePage() {
 
                           {/* VS and Remove Button */}
                           <div className="flex flex-col items-center mx-4">
-                            <div className={`text-gray-400 font-medium ${!isFinished ? 'mb-2' : ''}`}>VS</div>
+                            <div
+                              className={`text-gray-400 font-medium ${
+                                !isFinished ? "mb-2" : ""
+                              }`}
+                            >
+                              VS
+                            </div>
                             {/* Only show trash button for unfinished matches with predictions */}
-                            {!isFinished && (
+                            {!isFinished && isAuthenticated && (
                               <div className="flex items-center justify-center h-8">
                                 {hasGamePrediction && (
                                   <Button
@@ -538,7 +450,7 @@ export default function HomePage() {
                             {/* Team name, logo and real score */}
                             <div className="flex items-center gap-3">
                               <span className="text-lg font-bold text-green-600">
-                                {hasStarted ? (game.scores?.[1] || 0) : "-"}
+                                {hasStarted ? game.scores?.[1] || 0 : "-"}
                               </span>
                               <img
                                 src={`https://api.promiedos.com.ar/images/team/${game.teams[1].id}/1`}
@@ -550,24 +462,32 @@ export default function HomePage() {
                               </span>
                             </div>
                             {/* Prediction input */}
-                            {!isFinished && (
+                            {!isFinished && isAuthenticated && (
                               <div className="flex items-center">
                                 <input
                                   type="number"
                                   min="0"
                                   max="99"
                                   value={getPredictionScore(game.id, "away")}
-                                  onChange={(e) => updatePredictionScore(game.id, "away", e.target.value)}
+                                  onChange={(e) =>
+                                    handleUpdatePredictionScore(
+                                      game.id,
+                                      "away",
+                                      e.target.value
+                                    )
+                                  }
                                   placeholder="-"
                                   className="w-12 h-8 text-center text-sm font-medium text-blue-600 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
                                 />
                               </div>
                             )}
                             {/* Show prediction for finished match - always show, dash if no prediction */}
-                            {isFinished && (
+                            {isFinished && isAuthenticated && (
                               <div className="flex items-center">
                                 <span className="text-sm font-medium text-blue-600 min-w-[20px] text-center">
-                                  {hasGamePrediction ? getPredictionScore(game.id, "away") : "-"}
+                                  {hasGamePrediction
+                                    ? getPredictionScore(game.id, "away")
+                                    : "-"}
                                 </span>
                               </div>
                             )}
@@ -583,7 +503,7 @@ export default function HomePage() {
         </div>
 
         {/* Save All Predictions Button - moved to bottom */}
-        {predictionsCount > 0 && (
+        {predictionsCount > 0 && isAuthenticated && (
           <div className="flex justify-center mt-8 mb-8">
             <Button
               onClick={saveAllPredictions}
@@ -592,7 +512,9 @@ export default function HomePage() {
               className="bg-blue-600 hover:bg-blue-700 px-8 py-3 text-lg font-semibold"
             >
               <Save className="h-5 w-5 mr-2" />
-              {savingPredictions ? "Saving Predictions..." : `Save ${predictionsCount} Predictions`}
+              {savingPredictions
+                ? "Saving Predictions..."
+                : `Save ${predictionsCount} Predictions`}
             </Button>
           </div>
         )}
