@@ -1,8 +1,8 @@
 import { apiRequest } from './api'
 
 
-// Type definitions
-export interface User {
+// Type definitions for what backend actually returns
+export interface UserData {
   id: number;
   email?: string
   name?: string
@@ -12,15 +12,21 @@ export interface User {
   updatedAt: string
 }
 
+// What the backend returns from /auth/google/verify
+export interface AuthResponse {
+  user: UserData;
+  access_token: string;
+}
+
 export interface CreateUserData {
   name: string
   email: string
 }
 
 // User-related API functions
-// POST verify user
+// POST verify user - should return both user and token
 export const verifyUser = async (googleCredential: string) => {
-  return apiRequest<User>('/auth/google/verify', {
+  return apiRequest<AuthResponse>('/auth/google/verify', {
     method: 'POST',
     data: { credential: googleCredential },
   })
@@ -28,7 +34,7 @@ export const verifyUser = async (googleCredential: string) => {
 
 // POST create user
 export const createUser = async (userData: CreateUserData) => {
-  return apiRequest<User>('/users', {
+  return apiRequest<UserData>('/users', {
     method: 'POST',
     data: userData,
   })

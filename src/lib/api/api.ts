@@ -2,7 +2,7 @@ import axios from 'axios'
 import type { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { useStore } from '../../store'
 import { createUser, verifyUser } from './user'
-import { getMatches } from './matches/matches'
+import { getMatches, sendPredictions, getMyPronostics } from './matches/matches'
 
 // Base API configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
@@ -19,9 +19,18 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const state = useStore.getState()
+    console.log("Request interceptor - Full state:", state);
+    console.log("Request interceptor - User:", state.user);
+    console.log("Request interceptor - Access token:", state.user?.accessToken);
+    
     if (state.user?.accessToken) {
       config.headers.Authorization = `Bearer ${state.user.accessToken}`
+      console.log("Authorization header added:", config.headers.Authorization);
+    } else {
+      console.log("No access token found, skipping auth header");
     }
+    
+    console.log("Final request config:", config);
     return config
   },
   (error) => {
@@ -68,9 +77,12 @@ export const api = {
 
   // Matches-related endpoints
   getMatches,
+  sendPredictions,
+  getMyPronostics,
 
   // Other API endpoints can be added here
 }
 
 // Re-export types for convenience
-export type { User, CreateUserData } from './user'
+export type { UserData, CreateUserData, AuthResponse } from './user'
+export type { PredictionData } from './matches/matches'
