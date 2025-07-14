@@ -73,12 +73,12 @@ export default function PredictionInput({
           onFocus={handleFocus}
           placeholder="-"
           disabled={disabled || isPredictionTimeExpired}
-          className={`w-12 h-8 text-center text-sm font-medium transition-all duration-300 border rounded focus:outline-none focus:ring-2 focus:border-transparent [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
+          className={`w-16 h-10 text-center text-sm font-semibold transition-all duration-200 border-2 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent shadow-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
             showSuccess 
-              ? 'text-green-600 border-green-300 bg-green-50 focus:ring-green-500' 
+              ? 'text-green-800 border-green-400 bg-gradient-to-r from-green-100 to-emerald-100 focus:ring-green-500 shadow-md' 
               : disabled || isPredictionTimeExpired
-              ? 'bg-gray-100 text-gray-500 border-gray-300'
-              : 'text-blue-600 border-gray-300 bg-white focus:ring-blue-500'
+              ? 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 border-gray-300 shadow-sm'
+              : 'text-blue-800 border-blue-400 bg-gradient-to-r from-blue-100 to-indigo-100 focus:ring-blue-500 hover:shadow-md'
           }`}
         />
         

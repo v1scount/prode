@@ -188,7 +188,7 @@ export default function MatchCard({
             </span>
           </div>
           
-          {/* Prediction input */}
+          {/* Prediction input - always show while match is not finished */}
           {!isFinished && isAuthenticated && (
             <div className="relative">
               <PredictionInput
@@ -201,15 +201,15 @@ export default function MatchCard({
             </div>
           )}
           
-          {/* Show prediction for finished/expired match */}
-          {(isPredictionTimeExpired || isFinished) && isAuthenticated && (
+          {/* Show prediction for finished match only - improved styling */}
+          {isFinished && isAuthenticated && (
             <div className="flex items-center">
-              <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+              <div className={`px-4 py-2 rounded-lg text-sm font-semibold border-2 transition-all duration-200 ${
                 hasGamePrediction 
-                  ? isFinished && hasCorrectPrediction()
-                    ? "bg-yellow-100 text-yellow-700 border border-yellow-300"
-                    : "bg-blue-100 text-blue-700 border border-blue-200"
-                  : "bg-gray-100 text-gray-500 border border-gray-200"
+                  ? hasCorrectPrediction()
+                    ? "bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border-yellow-400 shadow-md"
+                    : "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-blue-400 shadow-sm"
+                  : "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 border-gray-300 shadow-sm"
               }`}>
                 {hasGamePrediction ? getPredictionScore(game.id, "home") : "-"}
               </div>
@@ -258,7 +258,7 @@ export default function MatchCard({
             </span>
           </div>
           
-          {/* Prediction input */}
+          {/* Prediction input - always show while match is not finished */}
           {!isFinished && isAuthenticated && (
             <div className="relative">
               <PredictionInput
@@ -271,15 +271,15 @@ export default function MatchCard({
             </div>
           )}
           
-          {/* Show prediction for finished/expired match */}
-          {(isPredictionTimeExpired || isFinished) && isAuthenticated && (
+          {/* Show prediction for finished match only - improved styling */}
+          {isFinished && isAuthenticated && (
             <div className="flex items-center">
-              <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+              <div className={`px-4 py-2 rounded-lg text-sm font-semibold border-2 transition-all duration-200 ${
                 hasGamePrediction 
-                  ? isFinished && hasCorrectPrediction()
-                    ? "bg-yellow-100 text-yellow-700 border border-yellow-300"
-                    : "bg-blue-100 text-blue-700 border border-blue-200"
-                  : "bg-gray-100 text-gray-500 border border-gray-200"
+                  ? hasCorrectPrediction()
+                    ? "bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border-yellow-400 shadow-md"
+                    : "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-blue-400 shadow-sm"
+                  : "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 border-gray-300 shadow-sm"
               }`}>
                 {hasGamePrediction ? getPredictionScore(game.id, "away") : "-"}
               </div>
