@@ -235,7 +235,7 @@ export default function HomePage() {
 
         {/* Footer */}
         <div className="text-center mt-12 text-gray-500">
-          <p>Good luck with your predictions! 🏆</p>
+          <p>Buena suerte con tus predicciones! 🏆</p>
         </div>
       </div>
     </div>

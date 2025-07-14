@@ -57,3 +57,43 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom animations for prediction feedback */
+@keyframes celebration {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(-2px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes confettiPop {
+  0% { transform: scale(0) rotate(0deg); opacity: 0; }
+  50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+  100% { transform: scale(1) rotate(360deg); opacity: 0.8; }
+}
+
+/* Animation utility classes */
+.animate-celebration {
+  animation: celebration 2s ease-in-out infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-confettiPop {
+  animation: confettiPop 1s ease-out;
+}
