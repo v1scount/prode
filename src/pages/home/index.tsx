@@ -38,71 +38,7 @@ interface Match {
   saved: boolean;
 }
 
-const initialMatches: Match[] = [
-  {
-    id: "1",
-    homeTeam: "Manchester United",
-    awayTeam: "Liverpool",
-    date: "2025-01-12",
-    time: "15:00",
-    homeScore: 0,
-    awayScore: 0,
-    saved: false,
-  },
-  {
-    id: "2",
-    homeTeam: "Arsenal",
-    awayTeam: "Chelsea",
-    date: "2025-01-12",
-    time: "17:30",
-    homeScore: 0,
-    awayScore: 0,
-    saved: false,
-  },
-  {
-    id: "3",
-    homeTeam: "Barcelona",
-    awayTeam: "Real Madrid",
-    date: "2025-01-13",
-    time: "20:00",
-    homeScore: 0,
-    awayScore: 0,
-    saved: false,
-  },
-  {
-    id: "4",
-    homeTeam: "Bayern Munich",
-    awayTeam: "Borussia Dortmund",
-    date: "2025-01-13",
-    time: "18:30",
-    homeScore: 0,
-    awayScore: 0,
-    saved: false,
-  },
-  {
-    id: "5",
-    homeTeam: "PSG",
-    awayTeam: "Marseille",
-    date: "2025-01-14",
-    time: "21:00",
-    homeScore: 0,
-    awayScore: 0,
-    saved: false,
-  },
-  {
-    id: "6",
-    homeTeam: "Juventus",
-    awayTeam: "AC Milan",
-    date: "2025-01-14",
-    time: "19:45",
-    homeScore: 0,
-    awayScore: 0,
-    saved: false,
-  },
-];
-
 export default function HomePage() {
-  const [matches, setMatches] = useState<Match[]>(initialMatches);
   const [loginDialog, setLoginDialog] = useState(false);
   const [savingPredictions, setSavingPredictions] = useState(false);
 
@@ -223,6 +159,45 @@ export default function HomePage() {
     } else return match.game_time_status_to_display;
   };
 
+  // Check if predictions should be disabled (less than 30 minutes to start)
+  const isPredictionTimeExpired = (game: Game) => {
+    if (game.status.enum !== 1) {
+      // Match has already started or finished
+      return true;
+    }
+
+    try {
+      // Add debugging to see the raw values
+      // Parse start_time format: "14-07-2025 19:15" (DD-MM-YYYY HH:mm)
+      const [datePart, timePart] = game.start_time.split(" ");
+      const [day, month, year] = datePart.split("-");
+
+      // Create a proper ISO date string: "YYYY-MM-DDTHH:mm"
+      const isoDateString = `${year}-${month}-${day}T${timePart}`;
+
+      const startTime = new Date(isoDateString);
+      const now = new Date();
+
+      if (isNaN(startTime.getTime())) {
+        console.log("Invalid date, disabling predictions");
+        return true;
+      }
+
+      // Calculate the difference in milliseconds
+      const timeDifference = startTime.getTime() - now.getTime();
+
+      // Convert to minutes
+      const minutesUntilStart = timeDifference / (1000 * 60);
+
+      // Return true if less than 30 minutes until start
+      return minutesUntilStart <= 10;
+    } catch (error) {
+      console.error("Error parsing start time:", error);
+      // If we can't parse the time, err on the side of caution and disable predictions
+      return true;
+    }
+  };
+
   // Get predictions count from store
   const predictionsCount = getPredictionsCount();
 
@@ -250,6 +225,8 @@ export default function HomePage() {
       isMounted = false;
     };
   }, [setCurrentMatches]);
+
+  console.log("Current matches:", currentMatches);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4 w-screen">
@@ -387,27 +364,29 @@ export default function HomePage() {
                               </span>
                             </div>
                             {/* Prediction input */}
-                            {!isFinished && isAuthenticated && (
-                              <div className="flex items-center">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="99"
-                                  value={getPredictionScore(game.id, "home")}
-                                  onChange={(e) =>
-                                    handleUpdatePredictionScore(
-                                      game.id,
-                                      "home",
-                                      e.target.value
-                                    )
-                                  }
-                                  placeholder="-"
-                                  className="w-12 h-8 text-center text-sm font-medium text-blue-600 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                                />
-                              </div>
-                            )}
+                            {!isFinished &&
+                              isAuthenticated &&
+                              !isPredictionTimeExpired(game) && (
+                                <div className="flex items-center">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="99"
+                                    value={getPredictionScore(game.id, "home")}
+                                    onChange={(e) =>
+                                      handleUpdatePredictionScore(
+                                        game.id,
+                                        "home",
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="-"
+                                    className="w-12 h-8 text-center text-sm font-medium text-blue-600 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                                  />
+                                </div>
+                              )}
                             {/* Show prediction for finished match - always show, dash if no prediction */}
-                            {isFinished && isAuthenticated && (
+                            {isPredictionTimeExpired(game) && isAuthenticated && (
                               <div className="flex items-center">
                                 <span className="text-sm font-medium text-blue-600 min-w-[20px] text-center">
                                   {hasGamePrediction
@@ -427,22 +406,24 @@ export default function HomePage() {
                             >
                               VS
                             </div>
-                            {/* Only show trash button for unfinished matches with predictions */}
-                            {!isFinished && isAuthenticated && (
-                              <div className="flex items-center justify-center h-8">
-                                {hasGamePrediction && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => removePrediction(game.id)}
-                                    className="h-8 w-8 p-0 border-red-300 text-red-500 hover:bg-red-50 hover:border-red-400 hover:text-red-600"
-                                    title="Remove prediction"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            )}
+                            {/* Only show trash button for unfinished matches with predictions and time not expired */}
+                            {!isFinished &&
+                              isAuthenticated &&
+                              !isPredictionTimeExpired(game) && (
+                                <div className="flex items-center justify-center h-8">
+                                  {hasGamePrediction && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => removePrediction(game.id)}
+                                      className="h-8 w-8 p-0 border-red-300 text-red-500 hover:bg-red-50 hover:border-red-400 hover:text-red-600"
+                                      title="Remove prediction"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
                           </div>
 
                           {/* Away Team */}
@@ -462,27 +443,29 @@ export default function HomePage() {
                               </span>
                             </div>
                             {/* Prediction input */}
-                            {!isFinished && isAuthenticated && (
-                              <div className="flex items-center">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="99"
-                                  value={getPredictionScore(game.id, "away")}
-                                  onChange={(e) =>
-                                    handleUpdatePredictionScore(
-                                      game.id,
-                                      "away",
-                                      e.target.value
-                                    )
-                                  }
-                                  placeholder="-"
-                                  className="w-12 h-8 text-center text-sm font-medium text-blue-600 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                                />
-                              </div>
-                            )}
+                            {!isFinished &&
+                              isAuthenticated &&
+                              !isPredictionTimeExpired(game) && (
+                                <div className="flex items-center">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="99"
+                                    value={getPredictionScore(game.id, "away")}
+                                    onChange={(e) =>
+                                      handleUpdatePredictionScore(
+                                        game.id,
+                                        "away",
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="-"
+                                    className="w-12 h-8 text-center text-sm font-medium text-blue-600 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                                  />
+                                </div>
+                              )}
                             {/* Show prediction for finished match - always show, dash if no prediction */}
-                            {isFinished && isAuthenticated && (
+                            {isPredictionTimeExpired(game) && isAuthenticated && (
                               <div className="flex items-center">
                                 <span className="text-sm font-medium text-blue-600 min-w-[20px] text-center">
                                   {hasGamePrediction

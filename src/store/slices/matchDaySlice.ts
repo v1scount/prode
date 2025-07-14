@@ -79,10 +79,8 @@ export const matchDaySlice: StateCreator<
       };
 
       if (existingPredictionIndex >= 0) {
-        // Update existing prediction only if not submitted
-        if (!state.userPredictions[existingPredictionIndex].submitted) {
-          state.userPredictions[existingPredictionIndex] = newPrediction;
-        }
+        // Always allow updating - remove the submitted check
+        state.userPredictions[existingPredictionIndex] = newPrediction;
       } else {
         // Add new prediction
         state.userPredictions.push(newPrediction);
@@ -100,13 +98,16 @@ export const matchDaySlice: StateCreator<
       const normalizedScore = Math.max(0, score || 0);
 
       if (existingPredictionIndex >= 0) {
-        // Update existing prediction only if not submitted
-        if (!state.userPredictions[existingPredictionIndex].submitted) {
-          const currentScores = state.userPredictions[existingPredictionIndex].prediction.scores;
-          const newScores = [...currentScores];
-          newScores[teamIndex] = normalizedScore;
-          state.userPredictions[existingPredictionIndex].prediction.scores = newScores;
-        }
+        // Allow updating even if submitted - mark as unsubmitted when edited
+        const currentScores = state.userPredictions[existingPredictionIndex].prediction.scores;
+        const newScores = [...currentScores];
+        newScores[teamIndex] = normalizedScore;
+        
+        state.userPredictions[existingPredictionIndex].prediction.scores = newScores;
+        // Mark as unsubmitted when edited so it can be saved again
+        state.userPredictions[existingPredictionIndex].submitted = false;
+        // Clear submittedAt timestamp
+        delete state.userPredictions[existingPredictionIndex].submittedAt;
       } else {
         // Create new prediction
         const newScores = [0, 0];
