@@ -116,6 +116,8 @@ export default function MatchCard({
     }
   };
 
+  // console.log(hasStarted);
+
   return (
     <div className={`rounded-lg border transition-all duration-300 ${cardStyle.container} ${showCelebration ? 'animate-celebration' : ''}`}>
       {/* Celebration confetti effect */}
@@ -289,7 +291,7 @@ export default function MatchCard({
       </div>
 
       {/* Predictions Toggle Button */}
-      {otherUsersPredictions.length > 0 && (
+      {otherUsersPredictions.length > 0 && (hasStarted || isFinished) && (
         <div className="border-t border-gray-200 px-4 py-3 bg-white/50">
           <Button
             variant="ghost"

@@ -98,11 +98,11 @@ export default function PredictionInput({
       </div>
 
       {/* Success feedback message */}
-      {showSuccess && (
+      {/* {showSuccess && (
         <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-green-600 font-medium animate-fadeIn">
           ✓ Guardado
         </div>
-      )}
+      )} */}
 
       {/* Error feedback for expired predictions */}
       {isShaking && isPredictionTimeExpired && (
