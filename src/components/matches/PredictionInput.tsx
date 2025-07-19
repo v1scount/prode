@@ -36,12 +36,12 @@ export default function PredictionInput({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     
-    // Check if trying to input when time is expired
-    // if (isPredictionTimeExpired && newValue !== value) {
-    //   setIsShaking(true);
-    //   setTimeout(() => setIsShaking(false), 500);
-    //   return;
-    // }
+    //Check if trying to input when time is expired
+    if (isPredictionTimeExpired && newValue !== value) {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
+      return;
+    }
 
     // Show loading state briefly
     setIsLoading(true);
@@ -70,9 +70,9 @@ export default function PredictionInput({
           max="99"
           value={value}
           onChange={handleChange}
-          // onFocus={handleFocus}
+          onFocus={handleFocus}
           placeholder="-"
-          // disabled={disabled || isPredictionTimeExpired}
+          disabled={disabled || isPredictionTimeExpired}
           className={`w-16 h-10 text-center text-sm font-semibold transition-all duration-200 border-2 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent shadow-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
             showSuccess 
               ? 'text-green-800 border-green-400 bg-gradient-to-r from-green-100 to-emerald-100 focus:ring-green-500 shadow-md' 
