@@ -86,14 +86,16 @@ export default function MatchCard({
         statusIcon: <Play className="h-3 w-3" />,
         statusText: "En vivo"
       };
-    } else if (isPredictionTimeExpired) {
-      return {
-        container: "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-300 shadow-sm",
-        statusBadge: "bg-orange-600 text-white",
-        statusIcon: <Clock className="h-3 w-3" />,
-        statusText: "Cerrado"
-      };
-    } else {
+    } 
+    // else if (isPredictionTimeExpired) {
+    //   return {
+    //     container: "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-300 shadow-sm",
+    //     statusBadge: "bg-orange-600 text-white",
+    //     statusIcon: <Clock className="h-3 w-3" />,
+    //     statusText: "Cerrado"
+    //   };
+    // } 
+    else {
       return {
         container: "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-sm hover:shadow-md",
         statusBadge: "bg-blue-600 text-white",
@@ -155,11 +157,11 @@ export default function MatchCard({
                 {hasGamePrediction ? "Pronóstico guardado" : "Sin pronóstico"}
               </div>
             )}
-            {isPredictionTimeExpired && !isFinished && (
+            {/* {isPredictionTimeExpired && !isFinished && (
               <div className="text-xs px-2 py-1 rounded-full font-medium bg-red-100 text-red-700">
                 Predicciones cerradas
               </div>
-            )}
+            )} */}
             {isFinished && hasGamePrediction && hasCorrectPrediction() && (
               <div className="text-xs px-2 py-1 rounded-full font-medium bg-yellow-100 text-yellow-700 animate-pulse">
                 🎯 ¡Acertaste!
@@ -226,7 +228,7 @@ export default function MatchCard({
           </div>
           
           {/* Remove button */}
-          {!isFinished && isAuthenticated && !isPredictionTimeExpired && hasGamePrediction && (
+          {!isFinished && isAuthenticated && /* !isPredictionTimeExpired && */ hasGamePrediction && (
             <div className="mt-3">
               <Button
                 variant="outline"
