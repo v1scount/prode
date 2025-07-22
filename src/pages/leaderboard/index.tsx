@@ -1,0 +1,94 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { Trophy, Medal, Award } from "lucide-react"
+
+export default function Leaderboard() {
+  const participants = [
+    { name: "Alice Johnson", points: 2450 },
+    { name: "Bob Smith", points: 2380 },
+    { name: "Carol Davis", points: 2290 },
+    { name: "David Wilson", points: 2150 },
+    { name: "Emma Brown", points: 2050 },
+    { name: "Frank Miller", points: 1980 },
+    { name: "Grace Lee", points: 1920 },
+    { name: "Henry Taylor", points: 1850 },
+    { name: "Ivy Chen", points: 1780 },
+    { name: "Jack Anderson", points: 1650 },
+  ]
+
+  // Sort participants by points in descending order
+  const sortedParticipants = participants.sort((a, b) => b.points - a.points)
+
+  const getRankIcon = (index: number) => {
+    switch (index) {
+      case 0:
+        return <Trophy className="h-5 w-5 text-yellow-500" />
+      case 1:
+        return <Medal className="h-5 w-5 text-gray-400" />
+      case 2:
+        return <Award className="h-5 w-5 text-amber-600" />
+      default:
+        return null
+    }
+  }
+
+  const getRankBadge = (index: number) => {
+    switch (index) {
+      case 0:
+        return (
+          <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600">
+            1st
+          </Badge>
+        )
+      case 1:
+        return <Badge variant="secondary">2nd</Badge>
+      case 2:
+        return (
+          <Badge variant="outline" className="border-amber-600 text-amber-600">
+            3rd
+          </Badge>
+        )
+      default:
+        return <Badge variant="outline">{index + 1}th</Badge>
+    }
+  }
+
+  return (
+    <div className="flex flex-1 flex-col space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Leaderboard</h1>
+      </div>
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center">Rankings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-16">Rank</TableHead>
+                <TableHead>Participant</TableHead>
+                <TableHead className="text-right">Points</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedParticipants.map((participant, index) => (
+                <TableRow key={participant.name} className={index < 3 ? "bg-muted/50" : ""}>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {getRankIcon(index)}
+                      {getRankBadge(index)}
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{participant.name}</TableCell>
+                  <TableCell className="text-right font-mono text-lg">{participant.points.toLocaleString()}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

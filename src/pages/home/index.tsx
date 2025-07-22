@@ -175,8 +175,8 @@ export default function HomePage() {
   console.log("Current matches:", currentMatches);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4 w-screen">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-full w-full">
+      <div className="max-w-6xl mx-auto">
         {/* CSS to hide number input arrows */}
         <style>{`
           input[type="number"]::-webkit-outer-spin-button,
@@ -195,16 +195,6 @@ export default function HomePage() {
           predictionsCount={predictionsCount}
         />
 
-        {/* User Authentication Section */}
-        <div className="absolute top-4 right-4">
-          <UserAuthSection
-            isAuthenticated={isAuthenticated}
-            user={user}
-            error={error}
-            onGoogleLogin={handleGoogleLogin}
-            onLogout={handleLogout}
-          />
-        </div>
 
         {/* Matches by Date */}
         <div className="space-y-8">
