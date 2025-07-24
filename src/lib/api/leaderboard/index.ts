@@ -2,5 +2,5 @@ import { apiRequest } from "../api";
 
 
 export const getLeaderboard = async () => {
-  return apiRequest("/leaderboard");
+  return apiRequest("/users/ranking/global");
 };
