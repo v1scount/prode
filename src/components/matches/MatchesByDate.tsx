@@ -32,14 +32,14 @@ export default function MatchesByDate({
   removePrediction,
 }: MatchesByDateProps) {
   return (
-    <Card className="shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-t-lg justify-center items-center">
-        <CardTitle className="text-xl font-semibold items-end">
+    <Card className="shadow-lg w-full max-w-2xl mx-auto">
+      <CardHeader className="bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-t-lg flex justify-center items-center p-3 md:p-6">
+        <CardTitle className="text-base md:text-xl font-semibold items-end">
           {formatDate(date)}
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-6">
-        <div className="space-y-4">
+      <CardContent className="p-3 md:p-6">
+        <div className="space-y-3 md:space-y-4">
           {matches.map((game) => {
             const isFinished = game.status.enum === 3;
             const hasGamePrediction = hasPrediction(game.id);

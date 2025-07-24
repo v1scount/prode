@@ -4,16 +4,23 @@ import { Badge } from "@/components/ui/badge"
 import { Trophy, Medal, Award } from "lucide-react"
 import { getLeaderboard } from "@/lib/api/leaderboard"
 import { useEffect, useState } from "react"
+import { useStore } from "@/store"
+import type { LeaderboardParticipant } from "@/store/slices/leaderboardSlice"
+import { Skeleton } from "@/components/ui/skeleton"
 
 
 export default function Leaderboard() {
-  const [leaderboard, setLeaderboard] = useState<any[]>([])
+  const leaderboard = useStore((s) => s.leaderboard)
+  const isLoading = useStore((s) => s.isLeaderboardLoading)
+  const setLeaderboard = useStore((s) => s.setLeaderboard)
+  const setLeaderboardLoading = useStore((s) => s.setLeaderboardLoading)
 
   useEffect(() => {
-    getLeaderboard().then((data) => {
-      setLeaderboard(data as any)
-      console.log(data)
-    })
+    setLeaderboardLoading(true)
+    getLeaderboard()
+      .then((data) => setLeaderboard(data as LeaderboardParticipant[]))
+      .catch(() => {/* handle error */})
+      .finally(() => setLeaderboardLoading(false))
   }, [])
 
   // console.log(leaderboard)
@@ -71,18 +78,32 @@ export default function Leaderboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {leaderboard.map((participant, index) => (
-                <TableRow key={participant.user.name} className={index < 3 ? "bg-muted/50" : ""}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      {getRankIcon(index)}
-                      {getRankBadge(index)}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">{participant.user.name}</TableCell>
-                  <TableCell className="text-right font-mono text-lg">{participant.globalPoints}</TableCell>
-                </TableRow>
-              ))}
+              {isLoading
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <Skeleton className="h-6 w-16" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-32" />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Skeleton className="h-6 w-12 ml-auto" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                : leaderboard?.map((participant, index) => (
+                    <TableRow key={participant.user.name} className={index < 3 ? "bg-muted/50" : ""}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {getRankIcon(index)}
+                          {getRankBadge(index)}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">{participant.user.name}</TableCell>
+                      <TableCell className="text-right font-mono text-lg">{participant.globalPoints}</TableCell>
+                    </TableRow>
+                  ))}
             </TableBody>
           </Table>
         </CardContent>

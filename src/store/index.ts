@@ -3,11 +3,13 @@ import { immer } from 'zustand/middleware/immer'
 import { persist } from 'zustand/middleware'
 import { userSlice } from './slices/userSlice'
 import { matchDaySlice } from './slices/matchDaySlice'
+import { leaderboardSlice } from './slices/leaderboardSlice'
 import type { UserSlice } from './slices/userSlice'
 import type { MatchDaySlice } from './slices/matchDaySlice'
+import type { LeaderboardSlice } from './slices/leaderboardSlice'
 
 // Combined store interface
-export interface AppStore extends UserSlice, MatchDaySlice {}
+export interface AppStore extends UserSlice, MatchDaySlice, LeaderboardSlice {}
 
 // Combine all slices into a single store with persistence
 export const useStore = create<AppStore>()(
@@ -15,6 +17,7 @@ export const useStore = create<AppStore>()(
     immer((set, get, api) => ({
       ...userSlice(set, get, api),
       ...matchDaySlice(set, get, api),
+      ...leaderboardSlice(set, get, api),
     })),
     {
       name: 'prode-store', // unique name for localStorage key

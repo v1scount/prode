@@ -39,12 +39,12 @@ import { Button } from "@/components/ui/button"
 const data = {
   navigation: [
     {
-      title: "Home",
+      title: "Inicio",
       url: "/",
       icon: Home,
     },
     {
-      title: "Leaderboard",
+      title: "Clasificación",
       url: "/leaderboard", 
       icon: Trophy,
     },
@@ -52,7 +52,7 @@ const data = {
   // You can add more sections here later
   settings: [
     {
-      title: "Settings",
+      title: "Configuración",
       url: "/settings",
       icon: Settings,
     },

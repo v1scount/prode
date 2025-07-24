@@ -136,7 +136,7 @@ export default function MatchCard({
 
   return (
     <div
-      className={`rounded-lg border transition-all duration-300 ${
+      className={`relative rounded-lg border transition-all duration-300 ${
         cardStyle.container
       } ${showCelebration ? "animate-celebration" : ""}`}
     >
@@ -156,7 +156,7 @@ export default function MatchCard({
       )}
 
       {/* Match Status Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white/50">
+      <div className="flex flex-row items-center justify-between px-2 sm:px-4 py-2 border-b border-gray-200 bg-white/50 gap-2">
         <div className="flex items-center gap-2">
           <div
             className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${cardStyle.statusBadge}`}
@@ -168,7 +168,6 @@ export default function MatchCard({
             {matchStatus}
           </span>
         </div>
-
         {/* Prediction Status Indicator */}
         {isAuthenticated && (
           <div className="flex items-center gap-2">
@@ -198,29 +197,25 @@ export default function MatchCard({
       </div>
 
       {/* Main Match Card */}
-      <div className="flex items-center justify-between p-4 bg-white/70">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between p-4 bg-white/70 gap-4 md:gap-0">
         {/* Home Team */}
-        <div className="flex flex-col items-end gap-3 flex-1">
-          {/* Team name, logo and real score */}
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-gray-900 text-lg">
+        <div className="flex-1 flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-1 w-full">
+            <span className="font-bold text-gray-900 text-lg text-center">
               {game.teams[0].name}
             </span>
-            <div className="relative">
-              <img
-                src={`https://api.promiedos.com.ar/images/team/${game.teams[0].id}/1`}
-                alt={game.teams[0].name}
-                className="w-8 h-8 rounded-full border-2 border-gray-200"
-              />
-            </div>
+            <img
+              src={`https://api.promiedos.com.ar/images/team/${game.teams[0].id}/1`}
+              alt={game.teams[0].name}
+              className="w-10 h-10 rounded-full border-2 border-gray-200"
+            />
             <span className={getScoreStyle(game.scores?.[0] || 0)}>
               {hasStarted ? game.scores?.[0] || 0 : "-"}
             </span>
           </div>
-
           {/* Prediction input - always show while match is not finished */}
           {!isFinished && isAuthenticated && (
-            <div className="relative">
+            <div className="w-16 mt-1">
               <PredictionInput
                 gameId={game.id}
                 team="home"
@@ -230,10 +225,9 @@ export default function MatchCard({
               />
             </div>
           )}
-
-          {/* Show prediction for finished match only - improved styling */}
+          {/* Show prediction for finished match only */}
           {isFinished && isAuthenticated && (
-            <div className="flex items-center">
+            <div className="flex items-center justify-center w-16 mt-1">
               <div
                 className={`px-4 py-2 rounded-lg text-sm font-semibold border-2 transition-all duration-200 ${
                   hasGamePrediction
@@ -250,16 +244,15 @@ export default function MatchCard({
         </div>
 
         {/* VS and Remove Button */}
-        <div className="flex flex-col items-center mx-6">
+        <div className="flex flex-col items-center justify-center md:w-32 gap-2 my-2 md:my-0">
           <div className="bg-white rounded-full p-3 shadow-sm border border-gray-200">
             <div className="text-gray-500 font-bold text-sm">VS</div>
           </div>
-
           {/* Remove button */}
           {!isFinished &&
             isAuthenticated &&
-            /* !isPredictionTimeExpired && */ hasGamePrediction && (
-              <div className="mt-3">
+            hasGamePrediction && (
+              <div>
                 <Button
                   variant="outline"
                   size="sm"
@@ -274,27 +267,23 @@ export default function MatchCard({
         </div>
 
         {/* Away Team */}
-        <div className="flex flex-col items-start gap-3 flex-1">
-          {/* Team name, logo and real score */}
-          <div className="flex items-center gap-3">
+        <div className="flex-1 flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-1 w-full">
+            <span className="font-bold text-gray-900 text-lg text-center">
+              {game.teams[1].name}
+            </span>
+            <img
+              src={`https://api.promiedos.com.ar/images/team/${game.teams[1].id}/1`}
+              alt={game.teams[1].name}
+              className="w-10 h-10 rounded-full border-2 border-gray-200"
+            />
             <span className={getScoreStyle(game.scores?.[1] || 0)}>
               {hasStarted ? game.scores?.[1] || 0 : "-"}
             </span>
-            <div className="relative">
-              <img
-                src={`https://api.promiedos.com.ar/images/team/${game.teams[1].id}/1`}
-                alt={game.teams[1].name}
-                className="w-8 h-8 rounded-full border-2 border-gray-200"
-              />
-            </div>
-            <span className="font-bold text-gray-900 text-lg">
-              {game.teams[1].name}
-            </span>
           </div>
-
           {/* Prediction input - always show while match is not finished */}
           {!isFinished && isAuthenticated && (
-            <div className="relative">
+            <div className="w-16 mt-1">
               <PredictionInput
                 gameId={game.id}
                 team="away"
@@ -304,10 +293,9 @@ export default function MatchCard({
               />
             </div>
           )}
-
-          {/* Show prediction for finished match only - improved styling */}
+          {/* Show prediction for finished match only */}
           {isFinished && isAuthenticated && (
-            <div className="flex items-center">
+            <div className="flex items-center justify-center w-16 mt-1">
               <div
                 className={`px-4 py-2 rounded-lg text-sm font-semibold border-2 transition-all duration-200 ${
                   hasGamePrediction
@@ -331,7 +319,7 @@ export default function MatchCard({
             variant="ghost"
             size="sm"
             onClick={() => setShowPredictions(!showPredictions)}
-            className="w-full flex items-center justify-between text-gray-700 hover:text-gray-900 hover:bg-gray-100/50"
+            className="w-full flex items-center justify-between text-gray-700 hover:text-gray-900 hover:bg-gray-100/50 text-sm sm:text-base"
           >
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -350,7 +338,7 @@ export default function MatchCard({
 
       {/* Predictions List */}
       {showPredictions && otherUsersPredictions.length > 0 && (
-        <div className="border-t border-gray-200 px-4 py-3 bg-gray-50/80">
+        <div className="border-t border-gray-200 px-2 sm:px-4 py-3 bg-gray-50/80">
           <div className="space-y-2">
             {otherUsersPredictions.map((pronostic) => {
               // Check if this user's prediction is correct
@@ -363,11 +351,7 @@ export default function MatchCard({
               return (
                 <div
                   key={pronostic.id}
-                  className={`flex items-center justify-between py-3 px-4 rounded-lg border shadow-sm hover:shadow-md transition-all ${
-                    isCorrect
-                      ? "bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300 ring-1 ring-yellow-200"
-                      : "bg-white border-gray-200"
-                  }`}
+                  className={`flex flex-col sm:flex-row items-start sm:items-center justify-between py-3 px-2 sm:px-4 rounded-lg border shadow-sm hover:shadow-md transition-all gap-2`}
                 >
                   <div className="flex items-center gap-3">
                     <div
@@ -399,7 +383,7 @@ export default function MatchCard({
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-2 sm:mt-0">
                     <div
                       className={`flex items-center gap-1 px-3 py-2 rounded-lg border ${
                         isCorrect
