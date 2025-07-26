@@ -93,7 +93,7 @@ export default function Leaderboard() {
                     </TableRow>
                   ))
                 : leaderboard?.map((participant, index) => (
-                    <TableRow key={participant.user.name} className={index < 3 ? "bg-muted/50" : ""}>
+                    <TableRow key={participant.user.name} >
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
                           {getRankIcon(index)}
